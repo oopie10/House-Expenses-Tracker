@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="House Expenses">
+<meta name="theme-color" content="#0f0f0f">
+<title>House Expenses</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #222222;
+    --border: #2e2e2e;
+    --text: #f0ede8;
+    --muted: #888;
+    --accent: #c8f07a;
+    --accent-dark: #9abf50;
+    --danger: #f07a7a;
+    --rental: #7ab8f0;
+    --own: #c8f07a;
+    --both: #f0c87a;
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 80px);
+  }
+
+  /* Header */
+  .header {
+    padding: 2rem 1.5rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .app-title {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--text);
+    line-height: 1.1;
+  }
+  .app-title span { color: var(--accent); font-style: normal; }
+  .month-label { font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+
+  /* Stats strip */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-bottom: 1px solid var(--border);
+  }
+  .stat {
+    padding: 1rem 1.25rem;
+    border-right: 1px solid var(--border);
+  }
+  .stat:last-child { border-right: none; }
+  .stat-label { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+  .stat-value { font-size: 18px; font-weight: 500; color: var(--text); }
+  .stat-value.green { color: var(--accent); }
+
+  /* Input section */
+  .input-section { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); }
+  .input-label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .input-wrap { position: relative; }
+  textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    padding: 12px 14px;
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.5;
+  }
+  textarea::placeholder { color: var(--muted); }
+  textarea:focus { border-color: var(--accent); }
+  .submit-btn {
+    width: 100%;
+    margin-top: 10px;
+    background: var(--accent);
+    color: #0f0f0f;
+    border: none;
+    border-radius: 10px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 13px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    letter-spacing: 0.04em;
+  }
+  .submit-btn:active { transform: scale(0.98); background: var(--accent-dark); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  #status-msg { font-size: 12px; color: var(--muted); margin-top: 8px; min-height: 18px; text-align: center; }
+  #status-msg.success { color: var(--accent); }
+  #status-msg.error { color: var(--danger); }
+
+  /* Preview card */
+  .preview-card {
+    margin: 0 1.5rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    overflow: hidden;
+    display: none;
+  }
+  .preview-card.show { display: block; }
+  .preview-header {
+    background: var(--accent);
+    color: #0f0f0f;
+    padding: 8px 14px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .preview-body { padding: 12px 14px; }
+  .preview-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; font-size: 13px; border-bottom: 1px solid var(--border); }
+  .preview-row:last-child { border-bottom: none; }
+  .preview-key { color: var(--muted); }
+  .preview-val { font-weight: 500; color: var(--text); }
+  .preview-actions { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--border); }
+  .btn-confirm {
+    flex: 1; background: var(--accent); color: #0f0f0f;
+    border: none; border-radius: 8px; font-family: var(--font-mono);
+    font-size: 13px; font-weight: 500; padding: 10px; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-confirm:active { background: var(--accent-dark); }
+  .btn-cancel {
+    flex: 0 0 auto; background: transparent; color: var(--muted);
+    border: 1px solid var(--border); border-radius: 8px; font-family: var(--font-mono);
+    font-size: 13px; padding: 10px 14px; cursor: pointer;
+  }
+
+  /* Log list */
+  .log-section { padding: 0 1.5rem; }
+  .log-header { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; padding: 1rem 0 0.75rem; }
+  .log-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+    animation: fadeIn 0.3s ease;
+  }
+  .log-item:last-child { border-bottom: none; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform:none; } }
+  .log-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    margin-top: 5px; flex-shrink: 0;
+  }
+  .log-dot.rental { background: var(--rental); }
+  .log-dot.own { background: var(--own); }
+  .log-dot.both { background: var(--both); }
+  .log-body { flex: 1; }
+  .log-desc { font-size: 14px; font-weight: 500; color: var(--text); }
+  .log-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .log-amount { font-size: 15px; font-weight: 500; color: var(--text); white-space: nowrap; }
+  .tag {
+    display: inline-block; font-size: 10px; padding: 1px 7px;
+    border-radius: 20px; margin-top: 4px; margin-right: 4px;
+    letter-spacing: 0.04em;
+  }
+  .tag.tax { background: rgba(200,240,122,0.15); color: var(--accent); }
+  .tag.notax { background: var(--surface2); color: var(--muted); }
+  .empty-state { font-size: 13px; color: var(--muted); padding: 2rem 0; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="app-title">House<br><span>Expenses</span></div>
+      <div class="month-label" id="month-label">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <div class="stat-label">Month</div>
+    <div class="stat-value green" id="stat-month">$0</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Rental</div>
+    <div class="stat-value" id="stat-rental">$0</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Tax ded.</div>
+    <div class="stat-value" id="stat-tax">$0</div>
+  </div>
+</div>
+
+<div class="input-section">
+  <div class="input-label">Log an expense</div>
+  <div class="input-wrap">
+    <textarea id="expense-input" rows="2" placeholder="e.g. $95 faucet rental unit today, or $180 electric both units May 10"></textarea>
+  </div>
+  <button class="submit-btn" id="log-btn" onclick="handleSubmit()">Parse & Log →</button>
+  <div id="status-msg"></div>
+</div>
+
+<div class="preview-card" id="preview-card">
+  <div class="preview-header">Confirm expense</div>
+  <div class="preview-body" id="preview-body"></div>
+  <div class="preview-actions">
+    <button class="btn-confirm" onclick="confirmExpense()">✓ Confirm & send to sheet</button>
+    <button class="btn-cancel" onclick="cancelExpense()">✕</button>
+  </div>
+</div>
+
+<div class="log-section">
+  <div class="log-header">This session</div>
+  <div id="log-list"><div class="empty-state">No expenses logged yet</div></div>
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3pBOBwnu3eDeb28L1sc5gmcnsug-gNz1BMzAHLbwbt2cc4LhUzVNY4ZygEGdXkWoFnQ/exec";
+const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
+let expenses = [];
+let pending = null;
+
+// Set month label
+const now = new Date();
+document.getElementById("month-label").textContent = now.toLocaleDateString("en-US", { month:"long", year:"numeric" });
+
+function setStatus(msg, type) {
+  const el = document.getElementById("status-msg");
+  el.textContent = msg;
+  el.className = type || "";
+}
+
+function updateStats() {
+  const thisMonth = expenses.filter(e => e.date.startsWith(now.getFullYear()+"-"+(String(now.getMonth()+1).padStart(2,"0"))));
+  document.getElementById("stat-month").textContent = "$" + thisMonth.reduce((s,e)=>s+e.amount,0).toFixed(0);
+  document.getElementById("stat-rental").textContent = "$" + expenses.filter(e=>e.unit==="Rental").reduce((s,e)=>s+e.amount,0).toFixed(0);
+  document.getElementById("stat-tax").textContent = "$" + expenses.filter(e=>e.taxDeductible==="Yes").reduce((s,e)=>s+e.amount,0).toFixed(0);
+}
+
+function renderLog() {
+  const el = document.getElementById("log-list");
+  if (!expenses.length) { el.innerHTML = '<div class="empty-state">No expenses logged yet</div>'; return; }
+  el.innerHTML = [...expenses].reverse().map(e => {
+    const dotClass = e.unit.toLowerCase();
+    return `<div class="log-item">
+      <div class="log-dot ${dotClass}"></div>
+      <div class="log-body">
+        <div class="log-desc">${e.description}</div>
+        <div class="log-meta">${e.date} · ${e.category} · ${e.unit}</div>
+        <span class="tag ${e.taxDeductible==='Yes'?'tax':'notax'}">${e.taxDeductible==='Yes'?'tax deductible':'not deductible'}</span>
+      </div>
+      <div class="log-amount">$${e.amount.toFixed(2)}</div>
+    </div>`;
+  }).join("");
+}
+
+async function parseWithClaude(text) {
+  const today = new Date().toISOString().split("T")[0];
+  const resp = await fetch(ANTHROPIC_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 500,
+      system: `You parse house expenses for a Buffalo NY duplex owner. Return ONLY valid JSON, no markdown. Today is ${today}.
+Format: {"date":"YYYY-MM-DD","description":"short description","category":"Repairs|Utilities|Appliances|Insurance|Taxes|Supplies|Services|Other","amount":123.45,"unit":"Own|Rental|Both","taxDeductible":"Yes|No"}
+Own = his personal unit. Rental = tenant unit. Both = shared/whole building. Rental expenses are typically tax deductible.`,
+      messages: [{ role: "user", content: text }]
+    })
+  });
+  const data = await resp.json();
+  const raw = data.content.find(b=>b.type==="text")?.text || "";
+  return JSON.parse(raw.replace(/```json|```/g,"").trim());
+}
+
+async function sendToSheets(expense) {
+  await fetch(SCRIPT_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify(expense),
+    mode: "no-cors"
+  });
+}
+
+function showPreview(expense) {
+  pending = expense;
+  document.getElementById("preview-body").innerHTML = `
+    <div class="preview-row"><span class="preview-key">Date</span><span class="preview-val">${expense.date}</span></div>
+    <div class="preview-row"><span class="preview-key">Description</span><span class="preview-val">${expense.description}</span></div>
+    <div class="preview-row"><span class="preview-key">Category</span><span class="preview-val">${expense.category}</span></div>
+    <div class="preview-row"><span class="preview-key">Amount</span><span class="preview-val">$${expense.amount.toFixed(2)}</span></div>
+    <div class="preview-row"><span class="preview-key">Unit</span><span class="preview-val">${expense.unit}</span></div>
+    <div class="preview-row"><span class="preview-key">Tax deductible</span><span class="preview-val">${expense.taxDeductible}</span></div>
+  `;
+  document.getElementById("preview-card").classList.add("show");
+  document.getElementById("preview-card").scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+async function handleSubmit() {
+  const input = document.getElementById("expense-input");
+  const text = input.value.trim();
+  if (!text) return;
+  const btn = document.getElementById("log-btn");
+  btn.disabled = true;
+  setStatus("Parsing with AI...");
+  try {
+    const expense = await parseWithClaude(text);
+    showPreview(expense);
+    setStatus("");
+  } catch(err) {
+    console.error(err);
+    setStatus("Couldn't parse — try rephrasing", "error");
+  }
+  btn.disabled = false;
+}
+
+async function confirmExpense() {
+  if (!pending) return;
+  const btn = document.querySelector(".btn-confirm");
+  btn.disabled = true;
+  btn.textContent = "Sending...";
+  try {
+    await sendToSheets(pending);
+    expenses.push(pending);
+    pending = null;
+    document.getElementById("expense-input").value = "";
+    document.getElementById("preview-card").classList.remove("show");
+    updateStats();
+    renderLog();
+    setStatus("✓ Logged to your sheet!", "success");
+    setTimeout(() => setStatus(""), 3000);
+  } catch(err) {
+    setStatus("Sheet send failed — expense saved locally", "error");
+    expenses.push(pending);
+    pending = null;
+    document.getElementById("preview-card").classList.remove("show");
+    updateStats();
+    renderLog();
+  }
+  btn.disabled = false;
+  btn.textContent = "✓ Confirm & send to sheet";
+}
+
+function cancelExpense() {
+  pending = null;
+  document.getElementById("preview-card").classList.remove("show");
+  setStatus("");
+}
+
+document.getElementById("expense-input").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit(); }
+});
+</script>
+</body>
+</html>
